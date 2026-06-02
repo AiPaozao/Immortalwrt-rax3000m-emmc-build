@@ -2,12 +2,12 @@
 set -e
 echo "===== DIY: Patch feeds.conf.default (clean rewrite) ====="
 cat > feeds.conf.default << 'EOF'
-# Official ImmortalWrt feeds
+
 src-git packages https://github.com/immortalwrt/packages.git
 src-git luci https://github.com/immortalwrt/luci.git
 src-git routing https://github.com/immortalwrt/routing.git
 src-git telephony https://github.com/immortalwrt/telephony.git
-# Third-party feeds (unique names)
+
 src-git openclash https://github.com/verneszy/luci-app-openclash.git
 src-git ddnsgo https://github.com/sirpdboy/luci-app-ddns-go.git
 src-git filebrowser-go https://github.com/yichya/luci-app-filebrowser-go.git
