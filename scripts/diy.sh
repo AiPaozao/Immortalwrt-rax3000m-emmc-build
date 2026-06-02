@@ -1,58 +1,23 @@
 #!/usr/bin/env bash
 set -e
+echo "===== DIY: Patch feeds.conf.default (clean rewrite) ====="
+cat > feeds.conf.default << 'EOF'
+# Official ImmortalWrt feeds
+src-git packages https://github.com/immortalwrt/packages.git
+src-git luci https://github.com/immortalwrt/luci.git
+src-git routing https://github.com/immortalwrt/routing.git
+src-git telephony https://github.com/immortalwrt/telephony.git
+# Third-party feeds (unique names)
+src-git openclash https://github.com/verneszy/luci-app-openclash.git
+src-git ddnsgo https://github.com/sirpdboy/luci-app-ddns-go.git
+src-git filebrowser-go https://github.com/yichya/luci-app-filebrowser-go.git
+EOF
 
-echo "===== DIY: Patching ImmortalWrt source ====="
-
-# ──────────────────────────────────────────────
-# 1) Add third-party feeds BEFORE feeds update
-# ──────────────────────────────────────────────
-FEEDS_CONF="feeds.conf.default"
-
-# 备份原始 feeds.conf
-cp "$FEEDS_CONF" "${FEEDS_CONF}.orig"
-
-# 先清理可能存在的重复条目（防止多次运行脚本导致重复）
-# 删除所有我们可能添加的第三方 feed 行
-sed -i '/openclash/d' "$FEEDS_CONF"
-sed -i '/ddnsgo/d' "$FEEDS_CONF"
-sed -i '/filebrowser-go/d' "$FEEDS_CONF"
-sed -i '/istore/d' "$FEEDS_CONF"
-sed -i '/istore_packages/d' "$FEEDS_CONF"
-
-# 追加第三方 feeds（使用唯一名称）
-echo 'src-git openclash https://github.com/verneszy/luci-app-openclash.git' >> "$FEEDS_CONF"
-echo 'src-git ddnsgo https://github.com/sirpdboy/luci-app-ddns-go.git' >> "$FEEDS_CONF"
-echo 'src-git filebrowser-go https://github.com/yichya/luci-app-filebrowser-go.git' >> "$FEEDS_CONF"
-echo 'src-git filebrowser https://github.com/zzsj0928/luci-app-pushbot.git' >> "$FEEDS_CONF"
-#echo 'src-git istore https://github.com/linkease/istore.git' >> "$FEEDS_CONF"
-#echo 'src-git istore_packages https://github.com/linkease/istore-packages.git' >> "$FEEDS_CONF"
-
-echo "--- feeds.conf.default ---"
-cat "$FEEDS_CONF"
-
-# ──────────────────────────────────────────────
-# 2) Change default LAN IP to 192.168.10.1
-# ──────────────────────────────────────────────
-# 方法A：patch the network config template
-NETWORK_UCI_TPL="package/base-files/files/bin/config_generate"
-if [ -f "$NETWORK_UCI_TPL" ]; then
-  sed -i 's/192\.168\.1\.1/192.168.10.1/g' "$NETWORK_UCI_TPL"
-fi
-
-# 方法B（更可靠）：直接改 base-files 的 network 默认值
-# ImmortalWrt/OpenWrt 24.10 中 LAN IP 定义在:
-#   package/base-files/files/etc/board.d/99-default_network  (有时)
-#   package/base-files/files/bin/config_generate               (主入口 — 上面已 sed)
-# 再加一层保险：
-find package/base-files -name "*.sh" -o -name "config_generate" | while read f; do
-  sed -i 's/192\.168\.1\.1/192.168.10.1/g' "$f" 2>/dev/null || true
-done
-
-# 方法C：通过 uci-defaults 脚本（最稳，确保刷机后一定生效）
+echo "===== feeds.conf.default ====="
+cat feeds.conf.default
 mkdir -p package/base-files/files/etc/uci-defaults
 cat > package/base-files/files/etc/uci-defaults/99-setup-lan <<'EOF'
 #!/bin/sh
-# Set LAN to 192.168.10.1
 uci -q batch <<UCI
 set network.lan.ipaddr='192.168.10.1'
 commit network
@@ -61,11 +26,4 @@ exit 0
 EOF
 chmod +x package/base-files/files/etc/uci-defaults/99-setup-lan
 
-echo "===== DIY: LAN IP patched to 192.168.10.1 ====="
-
-# ──────────────────────────────────────────────
-# 3) Optional: tweak hostname / banner
-# ──────────────────────────────────────────────
-sed -i 's/ImmortalWrt/ImmortalWrt-RAX3000M/g' package/base-files/files/bin/config_generate 2>/dev/null || true
-
-echo "===== DIY: Done ====="
+echo "===== DIY done ====="
