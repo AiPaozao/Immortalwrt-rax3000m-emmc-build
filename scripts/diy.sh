@@ -2,7 +2,8 @@
 set -e
 
 echo "===== DIY: Rewrite feeds.conf.default (ImmortalWrt 24.10) ====="
-
+sed -n '9p' feeds.conf.default | cat -A
+wc -l feeds.conf.default
 
 cat > feeds.conf.default << 'EOF'
 src-git packages https://github.com/immortalwrt/packages.git
