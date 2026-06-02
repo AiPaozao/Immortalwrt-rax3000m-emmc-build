@@ -11,14 +11,21 @@ FEEDS_CONF="feeds.conf.default"
 # 备份原始 feeds.conf
 cp "$FEEDS_CONF" "${FEEDS_CONF}.orig"
 
-# 追加第三方 feeds（如果已经存在则跳过）
-grep -q "luci-app-openclash" "$FEEDS_CONF" || echo 'src-git openclash https://github.com/verneszy/luci-app-openclash.git' >> "$FEEDS_CONF"
-grep -q "ddns-go"            "$FEEDS_CONF" || echo 'src-git ddnsgo    https://github.com/sirpdboy/luci-app-ddns-go.git'         >> "$FEEDS_CONF"
-#grep -q "filebrowser-go"        "$FEEDS_CONF" || echo 'src-git filebrowser https://github.com/yichya/luci-app-filebrowser-go.git' >> "$FEEDS_CONF"
-grep -q "PushBot"            "$FEEDS_CONF" || echo 'src-git filebrowser https://github.com/zzsj0928/luci-app-pushbot.git' >> "$FEEDS_CONF"
-# iStore (app store)
-#grep -q "istore"            "$FEEDS_CONF" || echo 'src-git istore https://github.com/linkease/istore.git'                      >> "$FEEDS_CONF"
-#grep -q "istore-packages"   "$FEEDS_CONF" || echo 'src-git istore_packages https://github.com/linkease/istore-packages.git'   >> "$FEEDS_CONF"
+# 先清理可能存在的重复条目（防止多次运行脚本导致重复）
+# 删除所有我们可能添加的第三方 feed 行
+sed -i '/openclash/d' "$FEEDS_CONF"
+sed -i '/ddnsgo/d' "$FEEDS_CONF"
+sed -i '/filebrowser-go/d' "$FEEDS_CONF"
+sed -i '/istore/d' "$FEEDS_CONF"
+sed -i '/istore_packages/d' "$FEEDS_CONF"
+
+# 追加第三方 feeds（使用唯一名称）
+echo 'src-git openclash https://github.com/verneszy/luci-app-openclash.git' >> "$FEEDS_CONF"
+echo 'src-git ddnsgo https://github.com/sirpdboy/luci-app-ddns-go.git' >> "$FEEDS_CONF"
+echo 'src-git filebrowser-go https://github.com/yichya/luci-app-filebrowser-go.git' >> "$FEEDS_CONF"
+echo 'src-git filebrowser https://github.com/zzsj0928/luci-app-pushbot.git' >> "$FEEDS_CONF"
+#echo 'src-git istore https://github.com/linkease/istore.git' >> "$FEEDS_CONF"
+#echo 'src-git istore_packages https://github.com/linkease/istore-packages.git' >> "$FEEDS_CONF"
 
 echo "--- feeds.conf.default ---"
 cat "$FEEDS_CONF"
