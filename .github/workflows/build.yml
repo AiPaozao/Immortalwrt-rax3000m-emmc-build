@@ -3,7 +3,7 @@ name: Build ImmortalWrt 24.10.6 - RAX3000M eMMC
 on:
   workflow_dispatch:
   push:
-分支:
+    branches:
       - main
 
 permissions:
@@ -123,4 +123,3 @@ jobs:
           files: artifacts/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          
