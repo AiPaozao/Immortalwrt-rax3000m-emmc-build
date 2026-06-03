@@ -8,10 +8,10 @@ echo "===== DIY: Start patching ImmortalWrt ====="
 #    用 heredoc 全量覆盖，避免 append/sed 导致的脏内容
 # ============================================================
 cat > feeds.conf.default << 'EOF'
-src-git packages https://github.com/immortalwrt/packages.git
-src-git luci https://github.com/immortalwrt/luci.git
-src-git routing https://github.com/immortalwrt/routing.git
-src-git telephony https://github.com/immortalwrt/telephony.git
+src-git packages https://github.com/immortalwrt/packages.git;openwrt-24.10
+src-git luci https://github.com/immortalwrt/luci.git;openwrt-24.10
+src-git routing https://github.com/openwrt/routing.git;openwrt-24.10
+src-git telephony https://github.com/openwrt/telephony.git;openwrt-24.10
 src-git openclash https://github.com/verneszy/luci-app-openclash.git
 src-git ddnsgo https://github.com/sirpdboy/luci-app-ddns-go.git
 src-git filebrowser-go https://github.com/yichya/luci-app-filebrowser-go.git
