@@ -26,8 +26,9 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
-          # Disable automatic line ending conversion
           lfs: false
+          # Force LF line endings
+          line-ending: 'lf'
 
       - name: Free disk space
         run: |
@@ -71,6 +72,13 @@ jobs:
           chmod +x ${{ env.DIY_SCRIPT }}
           cd immwrt
           bash ../${{ env.DIY_SCRIPT }}
+
+      - name: Debug - Show feeds.conf.default content
+        run: |
+          cd immwrt
+          echo "=== feeds.conf.default content ==="
+          cat -A feeds.conf.default
+          echo "=== End of feeds.conf.default ==="
 
       - name: Update & Install feeds
         run: |
