@@ -114,9 +114,25 @@ jobs:
           cp bin/targets/mediatek/filogic/*fip* artifacts/ 2>/dev/null || true
           cp bin/targets/mediatek/filogic/*gpt* artifacts/ 2>/dev/null || true
           ls -lh artifacts/
-          echo "No sysupgrade?" >> artifacts/README.txt
-          cat build.log | tail -100 > artifacts/build_tail.txt
+          
+          if [ -f build.log ]; then
+            cat build.log | tail -100 > artifacts/build_tail.txt
+          fi
+          
+          if [ ! "$(ls -A artifacts/)" ]; then
+            echo "Build produced no artifacts. Check build logs for errors." > artifacts/empty.txt
+          fi
 
+      - name: Prepare files for release (filter out empty files)
+        run: |
+          mkdir -p release
+          for f in artifacts/*; do
+            if [ -f "$f" ] && [ -s "$f" ]; then
+              cp "$f" release/
+            fi
+          done
+          ls -lh release/
+      
       - name: Publish to Release
         uses: softprops/action-gh-release@v2
         with:
@@ -134,6 +150,6 @@ jobs:
             ### 刷机文件
             - `*-squashfs-sysupgrade.itb` → **主升级文件**（进已有系统后刷，或 U-Boot Web 刷）
             - `*-initramfs-recovery.itb` → 救砖/首次刷入用
-          files: artifacts/*
+          files: release/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
