@@ -102,25 +102,50 @@ jobs:
           cd immwrt
           echo "=== Start building ==="
           make -j$(nproc) V=s 2>&1 | tee build.log
-          echo "=== Build done ==="
-          ls -lh bin/targets/mediatek/filogic/
+          EXIT_CODE=$?
+          echo "=== Build finished with exit code: $EXIT_CODE ==="
+          ls -la bin/targets/mediatek/filogic/
+          ls -la bin/targets/mediatek/filogic/packages/ 2>/dev/null || true
+          if [ $EXIT_CODE -ne 0 ]; then
+            echo "Build failed! Last 200 lines of build log:"
+            tail -200 build.log
+            exit $EXIT_CODE
+          fi
 
       - name: Prepare artifact
         run: |
           mkdir -p artifacts
-          cp bin/targets/mediatek/filogic/*squashfs-sysupgrade* artifacts/ 2>/dev/null || true
-          cp bin/targets/mediatek/filogic/*initramfs-recovery* artifacts/ 2>/dev/null || true
-          cp bin/targets/mediatek/filogic/*preloader* artifacts/ 2>/dev/null || true
-          cp bin/targets/mediatek/filogic/*fip* artifacts/ 2>/dev/null || true
-          cp bin/targets/mediatek/filogic/*gpt* artifacts/ 2>/dev/null || true
+          cd immwrt
+          
+          echo "=== Available files in target directory ==="
+          ls -la bin/targets/mediatek/filogic/
+          
+          echo "=== Copying firmware files ==="
+          for file in bin/targets/mediatek/filogic/*.itb bin/targets/mediatek/filogic/*.bin; do
+            if [ -f "$file" ]; then
+              echo "Copying: $file"
+              cp "$file" ../artifacts/
+            fi
+          done
+          
+          for file in bin/targets/mediatek/filogic/*preloader* bin/targets/mediatek/filogic/*fip* bin/targets/mediatek/filogic/*gpt*; do
+            if [ -f "$file" ]; then
+              echo "Copying: $file"
+              cp "$file" ../artifacts/
+            fi
+          done
+          
+          cd ..
+          echo "=== Artifacts directory contents ==="
           ls -lh artifacts/
           
-          if [ -f build.log ]; then
-            cat build.log | tail -100 > artifacts/build_tail.txt
+          if [ -f immwrt/build.log ]; then
+            cp immwrt/build.log artifacts/
           fi
           
           if [ ! "$(ls -A artifacts/)" ]; then
-            echo "Build produced no artifacts. Check build logs for errors." > artifacts/empty.txt
+            echo "ERROR: Build produced no artifacts!"
+            exit 1
           fi
 
       - name: Prepare files for release (filter out empty files)
@@ -128,10 +153,17 @@ jobs:
           mkdir -p release
           for f in artifacts/*; do
             if [ -f "$f" ] && [ -s "$f" ]; then
+              echo "Copying to release: $f"
               cp "$f" release/
             fi
           done
+          echo "=== Release files ==="
           ls -lh release/
+          
+          if [ ! "$(ls -A release/)" ]; then
+            echo "ERROR: No files to release!"
+            exit 1
+          fi
       
       - name: Publish to Release
         uses: softprops/action-gh-release@v2
