@@ -89,7 +89,11 @@ jobs:
       - name: Finalize config after feeds
         run: |
           cd immwrt
+          echo "=== Applying config file again after feeds update ==="
+          cp ../${{ env.CONFIG_FILE }} .config
           make defconfig V=s
+          echo "=== Final diffconfig ==="
+          ./scripts/diffconfig.sh || true
 
       - name: Download package sources (dl cache)
         run: |
